@@ -1,7 +1,7 @@
 const express = require('express');
 const session = require('express-session');
 const bcrypt = require('bcrypt');
-const Database = require('better-sqlite3');
+const Database = require('sqlite3').verbose();
 const path = require('path');
 const bodyParser = require('body-parser');
 
@@ -9,28 +9,32 @@ const app = express();
 const PORT = process.env.PORT || 5500;
 
 // Database setup
-const db = new Database('rsa_app.db');
+const db = new Database.Database('rsa_app.db');
 
 // Create tables
-db.exec(`
-  CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT UNIQUE,
-    password_hash TEXT,
-    public_key TEXT,
-    private_key TEXT
-  );
+db.serialize(() => {
+  db.run(`
+    CREATE TABLE IF NOT EXISTS users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT UNIQUE,
+      password_hash TEXT,
+      public_key TEXT,
+      private_key TEXT
+    )
+  `);
 
-  CREATE TABLE IF NOT EXISTS messages (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    sender_id INTEGER,
-    receiver_id INTEGER,
-    ciphertext TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (sender_id) REFERENCES users(id),
-    FOREIGN KEY (receiver_id) REFERENCES users(id)
-  );
-`);
+  db.run(`
+    CREATE TABLE IF NOT EXISTS messages (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      sender_id INTEGER,
+      receiver_id INTEGER,
+      ciphertext TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (sender_id) REFERENCES users(id),
+      FOREIGN KEY (receiver_id) REFERENCES users(id)
+    )
+  `);
+});
 
 // Middleware
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -58,14 +62,15 @@ app.get('/login', (req, res) => {
 
 app.post('/login', (req, res) => {
   const { username, password } = req.body;
-  const user = db.prepare('SELECT * FROM users WHERE username = ?').get(username);
-
-  if (user && bcrypt.compareSync(password, user.password_hash)) {
-    req.session.userId = user.id;
-    res.redirect('/dashboard');
-  } else {
-    res.send('Invalid credentials');
-  }
+  db.get('SELECT * FROM users WHERE username = ?', [username], (err, user) => {
+    if (err) return res.status(500).send('Database error');
+    if (user && bcrypt.compareSync(password, user.password_hash)) {
+      req.session.userId = user.id;
+      res.redirect('/dashboard');
+    } else {
+      res.send('Invalid credentials');
+    }
+  });
 });
 
 app.get('/register', (req, res) => {
@@ -76,13 +81,13 @@ app.post('/register', (req, res) => {
   const { username, password } = req.body;
   const hashedPassword = bcrypt.hashSync(password, 10);
 
-  try {
-    const stmt = db.prepare('INSERT INTO users (username, password_hash) VALUES (?, ?)');
-    stmt.run(username, hashedPassword);
-    res.redirect('/login');
-  } catch (error) {
-    res.send('Username already exists');
-  }
+  db.run('INSERT INTO users (username, password_hash) VALUES (?, ?)', [username, hashedPassword], function(err) {
+    if (err) {
+      res.send('Username already exists');
+    } else {
+      res.redirect('/login');
+    }
+  });
 });
 
 app.get('/dashboard', requireAuth, (req, res) => {
@@ -105,15 +110,17 @@ app.post('/generate-keys', requireAuth, (req, res) => {
   const publicKey = `n=123456789\ne=65537`; // Placeholder
   const privateKey = `n=123456789\ne=65537\nd=987654321`; // Placeholder
 
-  const stmt = db.prepare('UPDATE users SET public_key = ?, private_key = ? WHERE id = ?');
-  stmt.run(publicKey, privateKey, req.session.userId);
-
-  res.json({ publicKey, privateKey });
+  db.run('UPDATE users SET public_key = ?, private_key = ? WHERE id = ?', [publicKey, privateKey, req.session.userId], (err) => {
+    if (err) return res.status(500).json({ error: 'Database error' });
+    res.json({ publicKey, privateKey });
+  });
 });
 
 app.get('/users', requireAuth, (req, res) => {
-  const users = db.prepare('SELECT id, username, public_key FROM users WHERE id != ?').all(req.session.userId);
-  res.json(users);
+  db.all('SELECT id, username, public_key FROM users WHERE id != ?', [req.session.userId], (err, users) => {
+    if (err) return res.status(500).json({ error: 'Database error' });
+    res.json(users);
+  });
 });
 
 app.post('/encrypt', requireAuth, (req, res) => {
@@ -121,20 +128,22 @@ app.post('/encrypt', requireAuth, (req, res) => {
   // Encrypt logic here
   const ciphertext = `encrypted_${plaintext}`; // Placeholder
 
-  const stmt = db.prepare('INSERT INTO messages (sender_id, receiver_id, ciphertext) VALUES (?, ?, ?)');
-  stmt.run(req.session.userId, receiverId, ciphertext);
-
-  res.json({ success: true });
+  db.run('INSERT INTO messages (sender_id, receiver_id, ciphertext) VALUES (?, ?, ?)', [req.session.userId, receiverId, ciphertext], (err) => {
+    if (err) return res.status(500).json({ error: 'Database error' });
+    res.json({ success: true });
+  });
 });
 
 app.get('/messages', requireAuth, (req, res) => {
-  const messages = db.prepare(`
+  db.all(`
     SELECT m.*, u.username as sender_name
     FROM messages m
     JOIN users u ON m.sender_id = u.id
     WHERE m.receiver_id = ?
-  `).all(req.session.userId);
-  res.json(messages);
+  `, [req.session.userId], (err, messages) => {
+    if (err) return res.status(500).json({ error: 'Database error' });
+    res.json(messages);
+  });
 });
 
 app.post('/logout', (req, res) => {
