@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RSA App - Encrypt</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="hero">
+      <div>
+        <h1>RSA Secure Messaging</h1>
+        <p>Encrypt messages for other users.</p>
+      </div>
+    </header>
+
+    <nav class="tab-bar">
+      <a href="/dashboard" class="tab-button">Dashboard</a>
+      <a href="/encrypt" class="tab-button active">Encrypt</a>
+      <a href="/decrypt" class="tab-button">Decrypt</a>
+    </nav>
+
+    <main>
+      <section class="card">
+        <h2>Encrypt Message</h2>
+        <div class="action-block">
+          <label for="receiver-select">Select Receiver</label>
+          <select id="receiver-select">
+            <option value="">Select a user...</option>
+          </select>
+        </div>
+        <div class="action-block">
+          <label for="manual-public-key">Or Enter Public Key Manually</label>
+          <textarea id="manual-public-key" rows="6" placeholder="n=... e=..."></textarea>
+        </div>
+        <div class="action-block">
+          <label for="plaintext">Plaintext Message</label>
+          <textarea id="plaintext" rows="5" placeholder="Enter your message..."></textarea>
+        </div>
+        <div class="button-row">
+          <button id="encrypt-btn">Encrypt & Send</button>
+        </div>
+        <div class="action-block">
+          <label for="ciphertext">Ciphertext (Base64)</label>
+          <textarea id="ciphertext" rows="5" readonly placeholder="Encrypted message will appear here..."></textarea>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script src="encrypt.js"></script>
+</body>
+</html>

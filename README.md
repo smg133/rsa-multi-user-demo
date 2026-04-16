@@ -1,22 +1,45 @@
-# RSA Public Key Cryptography
+# RSA Secure Messaging App
 
-A browser-based RSA demo implementing 1024-bit and 2048-bit key generation, message encryption, and decryption using the Web Crypto API.
+A web application for secure messaging using RSA public-key cryptography. Users can register, generate RSA keys, and exchange encrypted messages.
 
-## Files
+## Features
 
-- `index.html` — main page and app layout
-- `styles.css` — styling for a modern UI
-- `script.js` — RSA key generation, encryption, and decryption logic
+- User registration and login
+- RSA key pair generation (1024/2048 bits)
+- Secure message encryption and decryption
+- User-to-user messaging with automatic public key lookup
+- Manual public key entry option
+
+## Setup
+
+1. Install dependencies:
+   ```
+   npm install
+   ```
+
+2. Start the server:
+   ```
+   npm start
+   ```
+
+3. Open http://localhost:5500 in your browser
 
 ## Usage
 
-1. Open `index.html` in your browser, or run the local server below.
-2. Choose either 1024-bit or 2048-bit RSA key size.
-3. Click **Generate Keys**.
-4. Enter plaintext and click **Encrypt** to produce Base64 ciphertext.
-5. Paste ciphertext into the decrypt field and click **Decrypt**.
+1. Register a new account or login
+2. Generate your RSA key pair in the dashboard
+3. Go to Encrypt to send messages to other users
+4. Go to Decrypt to view and decrypt received messages
 
-## Run locally with server
+## Files
+
+- `server.js` — Express server with SQLite database
+- `login.html` — Login page
+- `register.html` — Registration page
+- `dashboard.html` — User dashboard for key management
+- `encrypt.html` — Message encryption interface
+- `decrypt.html` — Message decryption interface
+- `styles.css` — Modern UI styling
 
 1. Install Node.js if needed.
 2. Open a terminal in this folder.

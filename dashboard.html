@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RSA App - Dashboard</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="hero">
+      <div>
+        <h1>RSA Secure Messaging</h1>
+        <p>Welcome to your secure dashboard.</p>
+      </div>
+    </header>
+
+    <nav class="tab-bar">
+      <a href="/dashboard" class="tab-button active">Dashboard</a>
+      <a href="/encrypt" class="tab-button">Encrypt</a>
+      <a href="/decrypt" class="tab-button">Decrypt</a>
+    </nav>
+
+    <main>
+      <section class="card">
+        <h2>Dashboard</h2>
+        <div class="action-block">
+          <h3>Generate Your RSA Keys</h3>
+          <select id="key-size">
+            <option value="1024">1024 bits</option>
+            <option value="2048" selected>2048 bits</option>
+          </select>
+          <button id="generate-keys">Generate Keys</button>
+        </div>
+        <div class="key-grid">
+          <div>
+            <h3>Your Public Key</h3>
+            <textarea id="public-key" readonly rows="6" placeholder="Generate keys to see your public key..."></textarea>
+            <button id="copy-public">Copy Public Key</button>
+          </div>
+          <div>
+            <h3>Your Private Key</h3>
+            <textarea id="private-key" readonly rows="6" placeholder="Generate keys to see your private key..."></textarea>
+            <button id="copy-private">Copy Private Key</button>
+          </div>
+        </div>
+        <div class="button-row">
+          <form action="/logout" method="POST" style="display: inline;">
+            <button type="submit">Logout</button>
+          </form>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script src="dashboard.js"></script>
+</body>
+</html>

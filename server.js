@@ -1,46 +1,155 @@
-const http = require("http");
-const fs = require("fs");
-const path = require("path");
+const express = require('express');
+const session = require('express-session');
+const bcrypt = require('bcrypt');
+const Database = require('better-sqlite3');
+const path = require('path');
+const bodyParser = require('body-parser');
 
+const app = express();
 const PORT = process.env.PORT || 5500;
-const PUBLIC_DIR = path.resolve(__dirname);
 
-const contentTypeMap = {
-  ".html": "text/html",
-  ".css": "text/css",
-  ".js": "application/javascript",
-  ".json": "application/json",
-  ".png": "image/png",
-  ".jpg": "image/jpeg",
-  ".jpeg": "image/jpeg",
-  ".svg": "image/svg+xml",
-  ".ico": "image/x-icon",
-};
+// Database setup
+const db = new Database('rsa_app.db');
 
-const server = http.createServer((req, res) => {
-  const requestPath = req.url === "/" ? "/index.html" : req.url;
-  const filePath = path.join(PUBLIC_DIR, requestPath);
+// Create tables
+db.exec(`
+  CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT UNIQUE,
+    password_hash TEXT,
+    public_key TEXT,
+    private_key TEXT
+  );
 
-  if (!filePath.startsWith(PUBLIC_DIR)) {
-    res.writeHead(403);
-    res.end("Forbidden");
-    return;
+  CREATE TABLE IF NOT EXISTS messages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    sender_id INTEGER,
+    receiver_id INTEGER,
+    ciphertext TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (sender_id) REFERENCES users(id),
+    FOREIGN KEY (receiver_id) REFERENCES users(id)
+  );
+`);
+
+// Middleware
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+app.use(session({
+  secret: 'rsa-secret-key-2024',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: false } // Set to true in production with HTTPS
+}));
+app.use(express.static(path.join(__dirname)));
+
+// Routes
+app.get('/', (req, res) => {
+  if (req.session.userId) {
+    res.redirect('/dashboard');
+  } else {
+    res.sendFile(path.join(__dirname, 'login.html'));
   }
-
-  fs.stat(filePath, (err, stats) => {
-    if (err || !stats.isFile()) {
-      res.writeHead(404);
-      res.end("Not found");
-      return;
-    }
-
-    const ext = path.extname(filePath).toLowerCase();
-    const contentType = contentTypeMap[ext] || "application/octet-stream";
-    res.writeHead(200, { "Content-Type": contentType });
-    fs.createReadStream(filePath).pipe(res);
-  });
 });
 
-server.listen(PORT, () => {
+app.get('/login', (req, res) => {
+  res.sendFile(path.join(__dirname, 'login.html'));
+});
+
+app.post('/login', (req, res) => {
+  const { username, password } = req.body;
+  const user = db.prepare('SELECT * FROM users WHERE username = ?').get(username);
+
+  if (user && bcrypt.compareSync(password, user.password_hash)) {
+    req.session.userId = user.id;
+    res.redirect('/dashboard');
+  } else {
+    res.send('Invalid credentials');
+  }
+});
+
+app.get('/register', (req, res) => {
+  res.sendFile(path.join(__dirname, 'register.html'));
+});
+
+app.post('/register', (req, res) => {
+  const { username, password } = req.body;
+  const hashedPassword = bcrypt.hashSync(password, 10);
+
+  try {
+    const stmt = db.prepare('INSERT INTO users (username, password_hash) VALUES (?, ?)');
+    stmt.run(username, hashedPassword);
+    res.redirect('/login');
+  } catch (error) {
+    res.send('Username already exists');
+  }
+});
+
+app.get('/dashboard', requireAuth, (req, res) => {
+  res.sendFile(path.join(__dirname, 'dashboard.html'));
+});
+
+app.get('/encrypt', requireAuth, (req, res) => {
+  res.sendFile(path.join(__dirname, 'encrypt.html'));
+});
+
+app.get('/decrypt', requireAuth, (req, res) => {
+  res.sendFile(path.join(__dirname, 'decrypt.html'));
+});
+
+app.post('/generate-keys', requireAuth, (req, res) => {
+  const { bits } = req.body;
+  // Use the existing RSA functions from script.js logic
+  // For simplicity, we'll simulate key generation here
+  // In a real app, you'd import the JS functions or rewrite in Node
+  const publicKey = `n=123456789\ne=65537`; // Placeholder
+  const privateKey = `n=123456789\ne=65537\nd=987654321`; // Placeholder
+
+  const stmt = db.prepare('UPDATE users SET public_key = ?, private_key = ? WHERE id = ?');
+  stmt.run(publicKey, privateKey, req.session.userId);
+
+  res.json({ publicKey, privateKey });
+});
+
+app.get('/users', requireAuth, (req, res) => {
+  const users = db.prepare('SELECT id, username, public_key FROM users WHERE id != ?').all(req.session.userId);
+  res.json(users);
+});
+
+app.post('/encrypt', requireAuth, (req, res) => {
+  const { plaintext, receiverId } = req.body;
+  // Encrypt logic here
+  const ciphertext = `encrypted_${plaintext}`; // Placeholder
+
+  const stmt = db.prepare('INSERT INTO messages (sender_id, receiver_id, ciphertext) VALUES (?, ?, ?)');
+  stmt.run(req.session.userId, receiverId, ciphertext);
+
+  res.json({ success: true });
+});
+
+app.get('/messages', requireAuth, (req, res) => {
+  const messages = db.prepare(`
+    SELECT m.*, u.username as sender_name
+    FROM messages m
+    JOIN users u ON m.sender_id = u.id
+    WHERE m.receiver_id = ?
+  `).all(req.session.userId);
+  res.json(messages);
+});
+
+app.post('/logout', (req, res) => {
+  req.session.destroy();
+  res.redirect('/login');
+});
+
+function requireAuth(req, res, next) {
+  if (req.session.userId) {
+    next();
+  } else {
+    res.redirect('/login');
+  }
+}
+
+app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
 });

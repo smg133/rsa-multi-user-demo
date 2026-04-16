@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RSA App - Decrypt</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="hero">
+      <div>
+        <h1>RSA Secure Messaging</h1>
+        <p>View and decrypt received messages.</p>
+      </div>
+    </header>
+
+    <nav class="tab-bar">
+      <a href="/dashboard" class="tab-button">Dashboard</a>
+      <a href="/encrypt" class="tab-button">Encrypt</a>
+      <a href="/decrypt" class="tab-button active">Decrypt</a>
+    </nav>
+
+    <main>
+      <section class="card">
+        <h2>Received Messages</h2>
+        <div id="messages-list"></div>
+      </section>
+    </main>
+  </div>
+  <script src="decrypt.js"></script>
+</body>
+</html>
