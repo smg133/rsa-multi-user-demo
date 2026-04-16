@@ -1,0 +1,11 @@
+{
+  "name": "rsa-public-key-cryptography",
+  "version": "1.0.0",
+  "description": "Browser-based RSA demo with 1024-bit and 2048-bit key generation.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "author": "",
+  "license": "MIT"
+}

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RSA Multi-User Demo</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">Project 12</p>
+        <h1>RSA Multi-User Demo</h1>
+        <p>Create multiple users, generate RSA key pairs, encrypt messages for selected recipients, and decrypt with user private keys.</p>
+      </div>
+    </header>
+
+    <div class="tab-bar">
+      <button class="tab-button active" data-tab="users-panel">Users</button>
+      <button class="tab-button" data-tab="encrypt-panel">Encrypt</button>
+      <button class="tab-button" data-tab="decrypt-panel">Decrypt</button>
+    </div>
+
+    <main>
+      <section class="card tab-panel active" id="users-panel">
+        <h2>Users</h2>
+        <div id="users-list"></div>
+        <div class="button-row">
+          <button id="add-user" type="button">Add User</button>
+        </div>
+      </section>
+
+      <section class="card tab-panel" id="encrypt-panel">
+        <h2>Encrypt</h2>
+        <div class="action-block">
+          <label for="recipient-select">Select Recipient</label>
+          <select id="recipient-select">
+            <option value="">Select Recipient</option>
+          </select>
+        </div>
+        <div class="action-block">
+          <label for="encrypt-public-key">Recipient Public Key</label>
+          <textarea id="encrypt-public-key" rows="6" readonly placeholder="Public key appears here when recipient is selected..."></textarea>
+        </div>
+        <div class="action-block">
+          <label for="plaintext">Plaintext</label>
+          <textarea id="plaintext" rows="5" placeholder="Enter plaintext to encrypt..."></textarea>
+          <div class="button-row">
+            <button id="encrypt">Encrypt</button>
+          </div>
+          <label for="ciphertext">Ciphertext (Base64)</label>
+          <textarea id="ciphertext" rows="5" readonly placeholder="Encrypted output appears here..."></textarea>
+        </div>
+      </section>
+
+      <section class="card tab-panel" id="decrypt-panel">
+        <h2>Decrypt</h2>
+        <div class="action-block">
+          <label for="decrypt-user-select">Select User</label>
+          <select id="decrypt-user-select">
+            <option value="">Select User</option>
+          </select>
+        </div>
+        <div class="action-block">
+          <label for="ciphertext-decrypt">Ciphertext (Base64)</label>
+          <textarea id="ciphertext-decrypt" rows="5" placeholder="Paste base64 ciphertext here..."></textarea>
+          <div class="button-row">
+            <button id="decrypt">Decrypt</button>
+          </div>
+          <label for="decrypted-text">Decrypted Plaintext</label>
+          <textarea id="decrypted-text" rows="5" readonly placeholder="Decrypted message appears here..."></textarea>
+        </div>
+      </section>
+
+      <section class="card hint-card">
+        <h2>How it works</h2>
+        <ul>
+          <li>Add users and generate RSA key pairs for each.</li>
+          <li>Select a recipient in the Encrypt tab to auto-fill their public key.</li>
+          <li>Encrypt plaintext to Base64 ciphertext using the recipient's public key.</li>
+          <li>Select the user in the Decrypt tab to decrypt with their private key.</li>
+        </ul>
+      </section>
+    </main>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
