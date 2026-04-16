@@ -17,12 +17,46 @@ A web application for secure messaging using RSA public-key cryptography. Users 
    npm install
    ```
 
-2. Start the server:
+2. Start the server locally:
    ```
    npm start
    ```
 
 3. Open http://localhost:5500 in your browser
+
+## Deployment
+
+This app can be deployed to services like Render, Railway, Heroku, or any Node.js host.
+
+### Deploy on Render
+
+1. Push your code to GitHub.
+2. Log in to Render and create a new **Web Service**.
+3. Connect your GitHub repository.
+4. Use the `main` branch.
+5. Set the build command to:
+   ```
+   npm install
+   ```
+6. Set the start command to:
+   ```
+   npm start
+   ```
+7. Render will provide a public URL like `https://your-app.onrender.com`.
+
+### Deploy on Railway
+
+1. Connect your GitHub repo to Railway.
+2. Create a new project from repository.
+3. Railway detects your Node app automatically.
+4. Confirm `npm install` and `npm start`.
+5. Railway gives you a public URL.
+
+## Public access and Google
+
+- After deployment, your site is publicly available at the provided URL.
+- Share that URL from another website to help Google discover it.
+- If you want Google to index the site, you can submit the URL in Google Search Console.
 
 ## Usage
 

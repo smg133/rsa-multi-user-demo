@@ -45,7 +45,6 @@ app.use(session({
   saveUninitialized: false,
   cookie: { secure: false } // Set to true in production with HTTPS
 }));
-app.use(express.static(path.join(__dirname)));
 
 // Routes
 app.get('/', (req, res) => {
@@ -54,6 +53,9 @@ app.get('/', (req, res) => {
   } else {
     res.sendFile(path.join(__dirname, 'login.html'));
   }
+});
+app.get(['/index.html', '/index'], (req, res) => {
+  res.redirect('/login');
 });
 
 app.get('/login', (req, res) => {
@@ -150,6 +152,8 @@ app.post('/logout', (req, res) => {
   req.session.destroy();
   res.redirect('/login');
 });
+
+app.use(express.static(path.join(__dirname)));
 
 function requireAuth(req, res, next) {
   if (req.session.userId) {
